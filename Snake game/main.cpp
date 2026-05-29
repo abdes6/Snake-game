@@ -1,6 +1,8 @@
-#include <iostream>
+﻿#include <iostream>
 #include <Windows.h>
 #include <conio.h>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
 // 地图尺寸
@@ -54,6 +56,17 @@ void initSnake(Snake* snk) {
 	snk->snake[0] = { W / 2, H / 2 };       // 蛇头
 	snk->snake[1] = { W / 2 - 1, H / 2 };   // 蛇身
 	snk->snake[2] = { W / 2 - 2, H / 2 };   // 蛇尾
+}
+
+// 设置光标位置（绝对坐标，无偏移）
+void gotoXY(int x, int y) {
+	COORD coord = { (SHORT)x, (SHORT)y };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+// 设置控制台文字颜色
+void setColor(int color) {
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
 
 // 隐藏控制台闪烁光标
@@ -111,33 +124,37 @@ void MoveSnake(Snake* snk) {
 	snk->snake[0].x += dir[snk->snakeDir][1];
 	snk->snake[0].y += dir[snk->snakeDir][0];
 }
-// 检测蛇头是否吃到食物，是则增长长度
-void checkEatFood(Snake* snk, Pos tail, Map* map) {
+// 检测蛇头是否吃到食物，是则增长长度，返回 true 表示吃到了
+bool checkEatFood(Snake* snk, Pos tail, Map* map) {
 	Pos head = snk->snake[0];
 	if (map->data[head.y][head.x] == BlockType::FOOD) {
 		snk->snake[snk->snakeLength++] = tail;  // 尾部追加，长度+1
 		map->data[head.y][head.x] = BlockType::EMPTY;
 		map->hasFood = false;
 		drawUnit(tail, "O");                     // 绘制新尾部
+		return true;
 	}
+	return false;
 }
-// 执行一次完整移动，返回 true 成功 / false 撞墙结束
-bool doMove(Snake* snk, Map* map) {
+// 执行一次完整移动，返回 true 成功 / false 撞墙结束，ate 传出是否吃到食物
+bool doMove(Snake* snk, Map* map, bool* ate) {
 	Pos tail = snk->snake[snk->snakeLength - 1];
 	drawUnit(tail, " ");
 	MoveSnake(snk);
 	if (checkOutofBound(snk->snake[0])) {
 		return false;
 	}
-	checkEatFood(snk, tail, map);
+	if (checkEatFood(snk, tail, map) && ate) {
+		*ate = true;
+	}
 	drawUnit(snk->snake[0], "O");
 	return true;
 }
-// 按时间间隔控制移动（200ms），返回 false 即游戏结束
-bool checkSnakeMove(Snake* snk, Map* map) {
+// 按时间间隔控制移动（200ms），返回 false 即游戏结束，ate 传出是否吃到食物
+bool checkSnakeMove(Snake* snk, Map* map, bool* ate) {
 	int cur = GetTickCount();  // 当前时间 ms
 	if (cur - snk->lastMoveTime > snk->moveFrequency) {
-		if (doMove(snk, map) == false) {
+		if (doMove(snk, map, ate) == false) {
 			return false;
 		}
 		snk->lastMoveTime = cur;
@@ -199,23 +216,205 @@ void initGame(Snake* snk, Map* map) {
 	drawMap(map);
 	drawSnake(snk);
 }
-int main() {
-	SetConsoleOutputCP(CP_UTF8);  // 启用 UTF-8 输出
+// 菜单选项
+enum MenuChoice {
+	MENU_START = 0,
+	MENU_HOWTO,
+	MENU_EXIT,
+};
 
+// 显示主菜单，返回用户选择
+int showMenu() {
+	int selected = 0;
+	const char* items[] = { "开始游戏", "操作说明", "退出游戏" };
+	int itemCount = 3;
+
+	while (1) {
+		system("cls");
+		setColor(7);
+
+		// 上边框
+		gotoXY(0, 0); cout << "+";
+		for (int i = 0; i < W; i++) cout << "-";
+		cout << "+";
+
+		// 两侧空白
+		for (int i = 1; i < H; i++) {
+			gotoXY(0, i); cout << "|";
+			gotoXY(W + 1, i); cout << "|";
+		}
+
+		// 下边框
+		gotoXY(0, H); cout << "+";
+		for (int i = 0; i < W; i++) cout << "-";
+		cout << "+";
+
+		// 标题
+		const char* title = "S N A K E   G A M E";
+		int titleLen = strlen(title);
+		setColor(11); gotoXY((W - titleLen) / 2 + 1, 4); cout << title;
+
+		// 副标题
+		const char* sub = "经 典 贪 吃 蛇";
+		int subLen = strlen(sub);
+		setColor(8); gotoXY((W - subLen) / 2 + 1, 6); cout << sub;
+
+		// 菜单项
+		for (int i = 0; i < itemCount; i++) {
+			int y = 10 + i * 3;
+			setColor(7);
+			gotoXY(W / 2 - 8, y);
+			if (i == selected) {
+				setColor(10); cout << ">> ";
+				setColor(14); cout << items[i];
+			} else {
+				cout << "   " << items[i];
+			}
+		}
+
+		// 底部提示
+		setColor(8);
+		gotoXY(W / 2 - 14, H - 3); cout << "↑↓ 选择  Enter 确认  ESC 退出";
+
+		// 输入处理
+		int key = _getch();
+		if (key == 224 || key == 0) {
+			key = _getch();
+			if (key == 72) selected = (selected - 1 + itemCount) % itemCount;
+			else if (key == 80) selected = (selected + 1) % itemCount;
+		} else if (key == 'w' || key == 'W') {
+			selected = (selected - 1 + itemCount) % itemCount;
+		} else if (key == 's' || key == 'S') {
+			selected = (selected + 1) % itemCount;
+		} else if (key == 13) {
+			return selected;
+		} else if (key == 27) {
+			return MENU_EXIT;
+		}
+	}
+}
+
+// 显示操作说明
+void showHowToPlay() {
+	system("cls");
+	for (int i = 0; i <= H; i++) {
+		gotoXY(0, i); cout << "|";
+		gotoXY(W + 1, i); cout << "|";
+	}
+	gotoXY(0, 0); cout << "+";
+	for (int i = 0; i < W; i++) cout << "-";
+	cout << "+";
+	gotoXY(0, H); cout << "+";
+	for (int i = 0; i < W; i++) cout << "-";
+	cout << "+";
+
+	setColor(14);
+	gotoXY(W / 2 - 6, 3); cout << "操 作 说 明";
+
+	setColor(7);
+	gotoXY(W / 2 - 12, 6); cout << "W / ↑  上移    S / ↓  下移";
+	gotoXY(W / 2 - 12, 7); cout << "A / ←  左移    D / →  右移";
+
+	setColor(14);
+	gotoXY(W / 2 - 6, 10); cout << "游 戏 规 则";
+	setColor(7);
+	gotoXY(W / 2 - 12, 12); cout << "*  吃 * 食物得分并增长身体";
+	gotoXY(W / 2 - 12, 13); cout << "*  撞墙则游戏结束";
+	gotoXY(W / 2 - 12, 14); cout << "*  蛇不能直接掉头反向";
+
+	setColor(8);
+	gotoXY(W / 2 - 14, H - 3); cout << "按 ESC 返回菜单  按 Enter 开始游戏";
+
+	while (1) {
+		int key = _getch();
+		if (key == 27) return;
+		if (key == 13) return;
+	}
+}
+
+// 显示游戏结束界面，返回用户选择 0=再来一次 1=返回菜单
+int showGameOver(int score) {
+	int selected = 0;
+	const char* items[] = { "再来一次", "返回菜单" };
+	int itemCount = 2;
+
+	while (1) {
+		setColor(12);
+		gotoXY(W / 2 - 4, H / 2 - 4); cout << "GAME OVER";
+		setColor(14);
+		gotoXY(W / 2 - 4, H / 2 - 2); cout << "得分: " << score;
+
+		for (int i = 0; i < itemCount; i++) {
+			int y = H / 2 + i * 2;
+			setColor(7);
+			gotoXY(W / 2 - 6, y);
+			if (i == selected) {
+				setColor(10); cout << ">> ";
+				setColor(15); cout << items[i];
+			} else {
+				cout << "   " << items[i];
+			}
+		}
+
+		setColor(8);
+		gotoXY(W / 2 - 12, H / 2 + 5); cout << "↑↓ 选择  Enter 确认";
+
+		int key = _getch();
+		if (key == 224 || key == 0) {
+			key = _getch();
+			if (key == 72) selected = (selected - 1 + itemCount) % itemCount;
+			else if (key == 80) selected = (selected + 1) % itemCount;
+		} else if (key == 'w' || key == 'W') {
+			selected = (selected - 1 + itemCount) % itemCount;
+		} else if (key == 's' || key == 'S') {
+			selected = (selected + 1) % itemCount;
+		} else if (key == 13) {
+			return selected;
+		}
+	}
+}
+
+// 完整游戏流程，返回 0=正常结束 1=要退出
+int runGame() {
 	Map map;
 	Snake snk;
-	initGame(&snk, &map);        // 初始化
+	int score = 0;
 
-	// 游戏主循环
+	initGame(&snk, &map);
+
 	while (1) {
-		checkChangeDir(&snk);                            // 处理键盘输入
-		if (checkSnakeMove(&snk, &map) == false) {       // 移动 + 碰撞检测
-			break;                                       // 撞墙则结束
-		}
-		checkFoodGenerate(&snk, &map);                   // 生成食物
+		checkChangeDir(&snk);
+		bool ate = false;
+		if (checkSnakeMove(&snk, &map, &ate) == false) break;
+		if (ate) score++;
+		checkFoodGenerate(&snk, &map);
 	}
 
-	drawUnit({ W / 2 - 4, H / 2 }, "Game Over");       // 显示结束文字
-	while (1) {}                                         // 保持窗口不关闭
+	int choice = showGameOver(score);
+	return choice;
+}
+
+int main() {
+	SetConsoleOutputCP(CP_UTF8);
+	hideCursor();
+	srand((unsigned int)time(NULL));
+
+	while (1) {
+		int menuChoice = showMenu();
+		if (menuChoice == MENU_HOWTO) {
+			showHowToPlay();
+			continue;
+		}
+		if (menuChoice == MENU_EXIT) break;
+
+		while (1) {
+			int result = runGame();
+			if (result == 1) break;
+		}
+	}
+
+	system("cls");
+	setColor(7);
+	cout << "感谢游玩!" << endl;
 	return 0;
 }
