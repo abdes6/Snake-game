@@ -226,7 +226,7 @@ enum MenuChoice {
 // 显示主菜单，返回用户选择
 int showMenu() {
 	int selected = 0;
-	const char* items[] = { "开始游戏", "操作说明", "退出游戏" };
+	const char* items[] = { "Start Game", "How to Play", "Exit" };
 	int itemCount = 3;
 
 	while (1) {
@@ -255,7 +255,7 @@ int showMenu() {
 		setColor(11); gotoXY((W - titleLen) / 2 + 1, 4); cout << title;
 
 		// 副标题
-		const char* sub = "经 典 贪 吃 蛇";
+		const char* sub = "C L A S S I C   S N A K E";
 		int subLen = strlen(sub);
 		setColor(8); gotoXY((W - subLen) / 2 + 1, 6); cout << sub;
 
@@ -274,7 +274,7 @@ int showMenu() {
 
 		// 底部提示
 		setColor(8);
-		gotoXY(W / 2 - 14, H - 3); cout << "↑↓ 选择  Enter 确认  ESC 退出";
+		gotoXY(W / 2 -18 , H - 3); cout << "W S  Select  Enter Confirm  ESC Exit";
 
 		// 输入处理
 		int key = _getch();
@@ -309,21 +309,21 @@ void showHowToPlay() {
 	cout << "+";
 
 	setColor(14);
-	gotoXY(W / 2 - 6, 3); cout << "操 作 说 明";
+	gotoXY(W / 2 - 6, 3); cout << "H O W   T O   P L A Y";
 
 	setColor(7);
-	gotoXY(W / 2 - 12, 6); cout << "W / ↑  上移    S / ↓  下移";
-	gotoXY(W / 2 - 12, 7); cout << "A / ←  左移    D / →  右移";
+	gotoXY(W / 2 - 12, 6); cout << "W / Up      S / Down";
+	gotoXY(W / 2 - 12, 7); cout << "A / Left    D / Right";
 
 	setColor(14);
-	gotoXY(W / 2 - 6, 10); cout << "游 戏 规 则";
+	gotoXY(W / 2 - 6, 10); cout << "G A M E   R U L E S";
 	setColor(7);
-	gotoXY(W / 2 - 12, 12); cout << "*  吃 * 食物得分并增长身体";
-	gotoXY(W / 2 - 12, 13); cout << "*  撞墙则游戏结束";
-	gotoXY(W / 2 - 12, 14); cout << "*  蛇不能直接掉头反向";
+	gotoXY(W / 2 - 12, 12); cout << "*  Eat food (*) to grow & score";
+	gotoXY(W / 2 - 12, 13); cout << "*  Hit wall = Game Over";
+	gotoXY(W / 2 - 12, 14); cout << "*  Can't reverse direction";
 
 	setColor(8);
-	gotoXY(W / 2 - 14, H - 3); cout << "按 ESC 返回菜单  按 Enter 开始游戏";
+	gotoXY(W / 2 - 14, H - 3); cout << "ESC = Menu    Enter = Start Game";
 
 	while (1) {
 		int key = _getch();
@@ -335,14 +335,14 @@ void showHowToPlay() {
 // 显示游戏结束界面，返回用户选择 0=再来一次 1=返回菜单
 int showGameOver(int score) {
 	int selected = 0;
-	const char* items[] = { "再来一次", "返回菜单" };
+	const char* items[] = { "Play Again", "Main Menu" };
 	int itemCount = 2;
 
 	while (1) {
 		setColor(12);
 		gotoXY(W / 2 - 4, H / 2 - 4); cout << "GAME OVER";
 		setColor(14);
-		gotoXY(W / 2 - 4, H / 2 - 2); cout << "得分: " << score;
+		gotoXY(W / 2 - 4, H / 2 - 2); cout << "Score: " << score;
 
 		for (int i = 0; i < itemCount; i++) {
 			int y = H / 2 + i * 2;
@@ -357,7 +357,7 @@ int showGameOver(int score) {
 		}
 
 		setColor(8);
-		gotoXY(W / 2 - 12, H / 2 + 5); cout << "↑↓ 选择  Enter 确认";
+		gotoXY(W / 2 - 12, H / 2 + 5); cout << "W S  Select  Enter Confirm";
 
 		int key = _getch();
 		if (key == 224 || key == 0) {
@@ -415,6 +415,6 @@ int main() {
 
 	system("cls");
 	setColor(7);
-	cout << "感谢游玩!" << endl;
+	cout << "Thanks for playing!" << endl;
 	return 0;
 }
