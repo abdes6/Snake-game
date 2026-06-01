@@ -39,6 +39,10 @@ int Game::run() {
 
             snake.move();
 
+            if (snake.checkSelfCollision()) {
+                break;
+            }
+
             Pos head = snake.getHeadPos();
             if (head.x <= 0 || head.x >= W || head.y <= 0 || head.y >= H) {
                 break;

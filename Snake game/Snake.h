@@ -10,6 +10,7 @@ public:
     int getDir() const;
     Pos getHeadPos() const;
     Pos getTail() const;
+    bool checkSelfCollision() const;
     const Pos* getBody() const;
     int getLength() const;
     void grow(Pos tail);

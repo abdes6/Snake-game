@@ -47,6 +47,15 @@ Pos Snake::getTail() const {
     return body[length - 1];
 }
 
+bool Snake::checkSelfCollision() const {
+    for (int i = 1; i < length; i++) {
+        if (body[0].x == body[i].x && body[0].y == body[i].y) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const Pos* Snake::getBody() const {
     return body;
 }
