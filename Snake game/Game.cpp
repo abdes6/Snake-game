@@ -20,6 +20,7 @@ int Game::run() {
     map.init();
     snake.init();
     map.draw();
+    Renderer::setColor(10);
     snake.draw();
     Renderer::gotoXY(2, H + 2);
     Renderer::setColor(14);
@@ -38,6 +39,7 @@ int Game::run() {
                     Renderer::setColor(0);
                     Renderer::gotoXY(W / 2 - 3, H / 2);
                     std::cout << "      ";
+                    Renderer::setColor(10);
                     lastMoveTime = GetTickCount();
                 }
                 continue;
@@ -58,26 +60,26 @@ int Game::run() {
             std::cout << "PAUSED";
             do {
                 int k = _getch();
+                
                 if (k == 'p' || k == 'P') {
+                    lastMoveTime = GetTickCount();
                     paused = false;
                     Renderer::setColor(0);
                     Renderer::gotoXY(W / 2 - 3, H / 2);
                     std::cout << "      ";
-                    snake.draw();
-                    lastMoveTime = GetTickCount();
-                    break;
+                    Renderer::setColor(10);
                 }
-            } while (true);
-            continue;
+            } while (paused);
         }
 
         int cur = GetTickCount();
-        if (cur - lastMoveTime > moveFrequency) {
+        if (cur - lastMoveTime > moveFrequency ) {
             Pos tail = snake.getTail();
+            Renderer::setColor(0);
             Renderer::drawUnit(tail, " ");
 
             snake.move();
-
+        
             if (snake.checkSelfCollision()) {
                 break;
             }
@@ -90,12 +92,14 @@ int Game::run() {
             if (map.isFoodAt(head.x, head.y)) {
                 snake.grow(tail);
                 map.removeFood(head.x, head.y);
+                Renderer::setColor(10);
                 Renderer::drawUnit(tail, "O");
                 score++;
                 Renderer::gotoXY(9, H + 2);
                 std::cout << score << "  ";
             }
 
+            Renderer::setColor(10);
             Renderer::drawUnit(head, "O");
             lastMoveTime = cur;
         }
