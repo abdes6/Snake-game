@@ -21,6 +21,9 @@ int Game::run() {
     snake.init();
     map.draw();
     snake.draw();
+    Renderer::gotoXY(2, H + 2);
+    Renderer::setColor(14);
+    std::cout << "Score: " << score;
 
     while (true) {
         if (_kbhit()) {
@@ -53,6 +56,9 @@ int Game::run() {
                 map.removeFood(head.x, head.y);
                 Renderer::drawUnit(tail, "O");
                 score++;
+                Renderer::gotoXY(9, H + 2);
+                Renderer::setColor(14);
+                std::cout << score << "  ";
             }
 
             Renderer::drawUnit(head, "O");
