@@ -34,14 +34,11 @@ int Game::run() {
             int key = _getch();
             if (key == 'p' || key == 'P') {
                 paused = !paused;
-                if (paused) {
-                    Renderer::setColor(11);
-                    Renderer::gotoXY(W / 2 - 3, H / 2);
-                    std::cout << "PAUSED";
-                } else {
+                if (!paused) {
                     Renderer::setColor(0);
                     Renderer::gotoXY(W / 2 - 3, H / 2);
                     std::cout << "      ";
+                    lastMoveTime = GetTickCount();
                 }
                 continue;
             }
@@ -55,7 +52,23 @@ int Game::run() {
             }
         }
 
-        if (paused) continue;
+        if (paused) {
+            Renderer::setColor(11);
+            Renderer::gotoXY(W / 2 - 3, H / 2);
+            std::cout << "PAUSED";
+            do {
+                int k = _getch();
+                if (k == 'p' || k == 'P') {
+                    paused = false;
+                    Renderer::setColor(0);
+                    Renderer::gotoXY(W / 2 - 3, H / 2);
+                    std::cout << "      ";
+                    lastMoveTime = GetTickCount();
+                    break;
+                }
+            } while (true);
+            continue;
+        }
 
         int cur = GetTickCount();
         if (cur - lastMoveTime > moveFrequency) {
