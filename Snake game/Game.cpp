@@ -63,6 +63,7 @@ int Game::run() {
                     Renderer::setColor(0);
                     Renderer::gotoXY(W / 2 - 3, H / 2);
                     std::cout << "      ";
+                    snake.draw();
                     lastMoveTime = GetTickCount();
                     break;
                 }
@@ -92,7 +93,6 @@ int Game::run() {
                 Renderer::drawUnit(tail, "O");
                 score++;
                 Renderer::gotoXY(9, H + 2);
-                Renderer::setColor(14);
                 std::cout << score << "  ";
             }
 
