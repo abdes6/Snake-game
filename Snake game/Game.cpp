@@ -24,16 +24,38 @@ int Game::run() {
     Renderer::gotoXY(2, H + 2);
     Renderer::setColor(14);
     std::cout << "Score: " << score;
+    Renderer::setColor(8);
+    Renderer::gotoXY(20, H + 2);
+    std::cout << "P = Pause";
+    bool paused = false;
 
     while (true) {
         if (_kbhit()) {
-            switch (_getch()) {
-            case 'w': if (snake.getDir() != 2) snake.setDir(0); break;
-            case 'd': if (snake.getDir() != 3) snake.setDir(1); break;
-            case 's': if (snake.getDir() != 0) snake.setDir(2); break;
-            case 'a': if (snake.getDir() != 1) snake.setDir(3); break;
+            int key = _getch();
+            if (key == 'p' || key == 'P') {
+                paused = !paused;
+                if (paused) {
+                    Renderer::setColor(11);
+                    Renderer::gotoXY(W / 2 - 3, H / 2);
+                    std::cout << "PAUSED";
+                } else {
+                    Renderer::setColor(0);
+                    Renderer::gotoXY(W / 2 - 3, H / 2);
+                    std::cout << "      ";
+                }
+                continue;
+            }
+            if (!paused) {
+                switch (key) {
+                case 'w': if (snake.getDir() != 2) snake.setDir(0); break;
+                case 'd': if (snake.getDir() != 3) snake.setDir(1); break;
+                case 's': if (snake.getDir() != 0) snake.setDir(2); break;
+                case 'a': if (snake.getDir() != 1) snake.setDir(3); break;
+                }
             }
         }
+
+        if (paused) continue;
 
         int cur = GetTickCount();
         if (cur - lastMoveTime > moveFrequency) {
