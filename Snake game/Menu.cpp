@@ -11,7 +11,6 @@ int Menu::show() {
 
     while (true) {
         system("cls");
-        Renderer::hideCursor();
         Renderer::setColor(7);
 
         Renderer::gotoXY(0, 0); std::cout << "+";
@@ -69,7 +68,6 @@ int Menu::show() {
 
 void Menu::showHowToPlay() {
     system("cls");
-    Renderer::hideCursor();
     for (int i = 0; i <= H; i++) {
         Renderer::gotoXY(0, i); std::cout << "|";
         Renderer::gotoXY(W + 1, i); std::cout << "|";
