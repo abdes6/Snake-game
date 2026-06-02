@@ -15,7 +15,14 @@ int Game::run() {
     Snake snake;
     int score = 0;
     int lastMoveTime = 0;
-    const int moveFrequency = 200;
+    int baseMoveFrequency = 200;
+    int moveFrequency = baseMoveFrequency;
+
+    bool sprinting = false;
+    int sprintStartTime = 0;
+    int lastSprintEndTime = -5000;
+    const int sprintDuration = 1000;
+    const int sprintCooldown = 3000;
 
     map.init();
     snake.init();
@@ -28,9 +35,18 @@ int Game::run() {
     Renderer::setColor(8);
     Renderer::gotoXY(20, H + 2);
     std::cout << "P = Pause";
+
     bool paused = false;
 
     while (true) {
+        int cur = GetTickCount();
+
+        if (sprinting && cur - sprintStartTime > sprintDuration) {
+            sprinting = false;
+            lastSprintEndTime = cur;
+            moveFrequency = baseMoveFrequency;
+        }
+
         if (_kbhit()) {
             int key = _getch();
             if (key == 'p' || key == 'P') {
@@ -45,11 +61,19 @@ int Game::run() {
                 continue;
             }
             if (!paused) {
+                if (key >= 'A' && key <= 'Z') key += 32;
                 switch (key) {
                 case 'w': if (snake.getDir() != 2) snake.setDir(0); break;
                 case 'd': if (snake.getDir() != 3) snake.setDir(1); break;
                 case 's': if (snake.getDir() != 0) snake.setDir(2); break;
                 case 'a': if (snake.getDir() != 1) snake.setDir(3); break;
+                case 'e':
+                    if (!sprinting && cur - lastSprintEndTime > sprintCooldown) {
+                        sprinting = true;
+                        sprintStartTime = cur;
+                        moveFrequency = 50;
+                    }
+                    break;
                 }
             }
         }
@@ -60,7 +84,7 @@ int Game::run() {
             std::cout << "PAUSED";
             do {
                 int k = _getch();
-                
+
                 if (k == 'p' || k == 'P') {
                     lastMoveTime = GetTickCount();
                     paused = false;
@@ -72,14 +96,13 @@ int Game::run() {
             } while (paused);
         }
 
-        int cur = GetTickCount();
-        if (cur - lastMoveTime > moveFrequency ) {
+        if (cur - lastMoveTime > moveFrequency) {
             Pos tail = snake.getTail();
             Renderer::setColor(0);
             Renderer::drawUnit(tail, " ");
 
             snake.move();
-        
+
             if (snake.checkSelfCollision()) {
                 break;
             }
@@ -97,6 +120,10 @@ int Game::run() {
                 score++;
                 Renderer::gotoXY(9, H + 2);
                 std::cout << score << "  ";
+                if (score % 5 == 0 && baseMoveFrequency > 50) {
+                    baseMoveFrequency -= 15;
+                    moveFrequency = sprinting ? max(40, baseMoveFrequency - 60) : baseMoveFrequency;
+                }
             }
 
             Renderer::setColor(10);
