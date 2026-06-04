@@ -1,8 +1,25 @@
 #include "Game.h"
 #include "Renderer.h"
 #include <conio.h>
+#include <cstdio>
 #include <iostream>
 #include <Windows.h>
+
+int Game::loadHighScore() {
+    FILE* f = nullptr;
+    if (fopen_s(&f, "highscore.dat", "r") != 0 || !f) return 0;
+    int score;
+    if (fscanf_s(f, "%d", &score) != 1) score = 0;
+    fclose(f);
+    return score;
+}
+
+void Game::saveHighScore(int score) {
+    FILE* f = nullptr;
+    if (fopen_s(&f, "highscore.dat", "w") != 0 || !f) return;
+    fprintf(f, "%d", score);
+    fclose(f);
+}
 
 void Game::drawUI(int score) {
     Renderer::gotoXY(2, H + 2);
@@ -149,24 +166,43 @@ int Game::run(int difficulty) {
         map.generateFood(snake);
     }
 
-    return showGameOver(score);
+    int highScore = loadHighScore();
+    bool isNew = score > highScore;
+    if (isNew) saveHighScore(score);
+    return showGameOver(score, max(score, highScore), isNew);
 }
 
-int Game::showGameOver(int score) {
+int Game::showGameOver(int score, int highScore, bool isNewHighScore) {
     int selected = 0;
     const char* items[] = { "Play Again", "Main Menu" };
     int itemCount = 2;
 
     while (true) {
+        const char* boxBorder = "+------------+";
+        const char* boxMid    = "|  GAME OVER |";
+
         Renderer::setColor(12);
-        Renderer::gotoXY(W / 2 - 4, H / 2 - 4); std::cout << "GAME OVER";
+        Renderer::gotoXY(W / 2 - 7, H / 2 - 6); std::cout << boxBorder;
+        Renderer::gotoXY(W / 2 - 7, H / 2 - 5); std::cout << boxMid;
+        Renderer::gotoXY(W / 2 - 7, H / 2 - 4); std::cout << boxBorder;
+
         Renderer::setColor(14);
-        Renderer::gotoXY(W / 2 - 4, H / 2 - 2); std::cout << "Score: " << score;
+        Renderer::gotoXY(W / 2 - 5, H / 2 - 1); std::cout << "Score: " << score;
+
+        if (isNewHighScore) {
+            Renderer::setColor(13);
+            Renderer::gotoXY(W / 2 - 10, H / 2 + 1);
+            std::cout << "* NEW HIGH SCORE! *";
+        }
+
+        Renderer::setColor(isNewHighScore ? 13 : 8);
+        Renderer::gotoXY(W / 2 - 5, H / 2 + 2);
+        std::cout << "Best: " << highScore;
 
         for (int i = 0; i < itemCount; i++) {
-            int y = H / 2 + i * 2;
+            int y = H / 2 + 5 + i * 3;
             Renderer::setColor(7);
-            Renderer::gotoXY(W / 2 - 6, y);
+            Renderer::gotoXY(W / 2 - 8, y);
             if (i == selected) {
                 Renderer::setColor(10); std::cout << ">> ";
                 Renderer::setColor(15); std::cout << items[i];
@@ -175,7 +211,6 @@ int Game::showGameOver(int score) {
                 std::cout << "   " << items[i];
             }
         }
-
 
         int key = _getch();
         if (key == 224 || key == 0) {
