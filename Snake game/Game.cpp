@@ -85,6 +85,7 @@ bool Game::moveTick(int cur, Map& map, Snake& snake, int& score,
 
     Pos head = snake.getHeadPos();
     if (head.x <= 0 || head.x >= W || head.y <= 0 || head.y >= H) return true;
+    if (map.isObstacleAt(head.x, head.y)) return true;
 
     if (map.isFoodAt(head.x, head.y)) {
         snake.grow(tail);
@@ -110,12 +111,14 @@ void Game::init() {
     Renderer::hideCursor();
 }
 
-int Game::run() {
+int Game::run(int difficulty) {
     Map map;
     Snake snake;
     int score = 0;
     int lastMoveTime = 0;
-    int baseMoveFrequency = 200;
+    const int obstacleCounts[] = { 5, 10, 15 };
+    const int baseSpeeds[] = { 250, 200, 150 };
+    int baseMoveFrequency = baseSpeeds[difficulty];
     int moveFrequency = baseMoveFrequency;
     Sprint sprint;
     bool paused = false;
@@ -123,6 +126,7 @@ int Game::run() {
     map.init();
     snake.init();
     map.draw();
+    map.generateObstacles(snake, obstacleCounts[difficulty]);
     Renderer::setColor(10);
     snake.draw();
     drawUI(score);
@@ -172,8 +176,6 @@ int Game::showGameOver(int score) {
             }
         }
 
-        Renderer::setColor(8);
-        Renderer::gotoXY(W / 2 - 12, H / 2 + 5); std::cout << "W S  Select  Enter Confirm";
 
         int key = _getch();
         if (key == 224 || key == 0) {

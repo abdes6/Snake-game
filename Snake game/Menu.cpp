@@ -4,11 +4,11 @@
 #include <cstring>
 #include <iostream>
 
-int Menu::show() {
+int Menu::show(int& difficulty) {
     int selected = 0;
-    const char* items[] = { "Start Game", "How to Play", "Exit" };
-    int itemCount = 3;
-
+    int itemCount = 4;
+    const char* itemLabels[] = { "Start Game", "", "How to Play", "Exit" };
+    const char* diffLabels[] = { "Easy", "Medium", "Hard" };
     while (true) {
         system("cls");
         Renderer::hideCursor();
@@ -39,16 +39,24 @@ int Menu::show() {
             int y = 10 + i * 3;
             Renderer::setColor(7);
             Renderer::gotoXY(W / 2 - 8, y);
+
+            const char* label;
+            char buf[32];
+            if (i == 1) {
+                sprintf_s(buf, "Difficulty: %s", diffLabels[difficulty]);
+                label = buf;
+            } else {
+                label = itemLabels[i];
+            }
+
             if (i == selected) {
                 Renderer::setColor(10); std::cout << ">> ";
-                Renderer::setColor(14); std::cout << items[i];
+                Renderer::setColor(14); std::cout << label;
             } else {
-                std::cout << "   " << items[i];
+                std::cout << "   " << label;
             }
         }
 
-        Renderer::setColor(8);
-        Renderer::gotoXY(W / 2 - 18, H - 3); std::cout << "W S  Select  Enter Confirm  ESC Exit";
 
         int key = _getch();
         if (key == 224 || key == 0) {
@@ -60,7 +68,13 @@ int Menu::show() {
         } else if (key == 's' || key == 'S') {
             selected = (selected + 1) % itemCount;
         } else if (key == 13) {
-            return selected;
+            if (selected == 1) {
+                difficulty = (difficulty + 1) % 3;
+            } else {
+                if (selected == 0) return 0;
+                if (selected == 2) return 1;
+                if (selected == 3) return 2;
+            }
         } else if (key == 27) {
             return 2;
         }
@@ -93,7 +107,8 @@ void Menu::showHowToPlay() {
     Renderer::setColor(7);
     Renderer::gotoXY(W / 2 - 12, 12); std::cout << "*  Eat food (*) to grow & score";
     Renderer::gotoXY(W / 2 - 12, 13); std::cout << "*  Hit wall = Game Over";
-    Renderer::gotoXY(W / 2 - 12, 14); std::cout << "*  Can't reverse direction";
+    Renderer::gotoXY(W / 2 - 12, 14); std::cout << "*  Hit obstacle (#) = Game Over";
+    Renderer::gotoXY(W / 2 - 12, 15); std::cout << "*  Can't reverse direction";
 
     Renderer::setColor(8);
     Renderer::gotoXY(W / 2 - 14, H - 3); std::cout << "ESC = Menu    Enter = Start Game";

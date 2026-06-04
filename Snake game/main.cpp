@@ -12,9 +12,10 @@ int main() {
     Game game;
     Menu menu;
     game.init();
+    int difficulty = 1;
 
     while (true) {
-        int menuChoice = menu.show();
+        int menuChoice = menu.show(difficulty);
         if (menuChoice == 1) {
             menu.showHowToPlay();
             continue;
@@ -22,7 +23,7 @@ int main() {
         if (menuChoice == 2) break;
 
         while (true) {
-            int result = game.run();
+            int result = game.run(difficulty);
             if (result == 1) break;
         }
     }

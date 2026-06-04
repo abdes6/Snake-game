@@ -49,6 +49,33 @@ void Map::generateFood(const Snake& snake) {
     }
 }
 
+void Map::generateObstacles(const Snake& snake, int count) {
+    for (int i = 0; i < count; i++) {
+        while (true) {
+            int x = rand() % W;
+            int y = rand() % H;
+            if (data[y][x] != BlockType::EMPTY) continue;
+            bool occupied = false;
+            for (int j = 0; j < snake.getLength(); j++) {
+                if (x == snake.getBody()[j].x && y == snake.getBody()[j].y) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (!occupied) {
+                data[y][x] = BlockType::OBSTACLE;
+                Renderer::setColor(4);
+                Renderer::drawUnit({ x, y }, "#");
+                break;
+            }
+        }
+    }
+}
+
+bool Map::isObstacleAt(int x, int y) const {
+    return data[y][x] == BlockType::OBSTACLE;
+}
+
 bool Map::isFoodAt(int x, int y) const {
     return data[y][x] == BlockType::FOOD;
 }

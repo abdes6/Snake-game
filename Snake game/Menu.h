@@ -3,6 +3,6 @@
 
 class Menu {
 public:
-    int show();
+    int show(int& difficulty);
     void showHowToPlay();
 };

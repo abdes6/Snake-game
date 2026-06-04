@@ -12,7 +12,7 @@ struct Sprint {
 class Game {
 public:
     void init();
-    int run();
+    int run(int difficulty);
 
 private:
     void drawUI(int score);

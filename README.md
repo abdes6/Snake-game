@@ -9,7 +9,7 @@
 
 ### 命令行（MSVC）
 ```bash
-cl main.cpp
+cl main.cpp *.cpp
 main.exe
 ```
 
@@ -20,28 +20,37 @@ main.exe
 
 ## 游戏操作
 
-| 按键 | 方向 |
+| 按键 | 功能 |
 |------|------|
-| W    | 上   |
-| S    | 下   |
-| A    | 左   |
-| D    | 右   |
+| W / ↑ | 上移 |
+| S / ↓ | 下移 |
+| A / ← | 左移 |
+| D / → | 右移 |
+| E | 加速冲刺（持续 1 秒，冷却 3 秒） |
+| P | 暂停 / 继续 |
+| ESC | 返回菜单（菜单页）/ 退出（菜单页） |
 
 ## 游戏规则
 
 - 控制蛇头移动，吃 `*`（食物）可得分并增长
-- 撞墙则游戏结束，屏幕中央显示 **"Game Over"**
-- **当前版本未实现自身体碰撞**，蛇可以穿过自己身体
+- 撞墙或撞自身则游戏结束，弹出 **"Play Again" / "Main Menu"** 选择
+- 不可反向移动（如向右时不能立即向左）
+- 每吃 5 个食物，游戏速度提升一级（移动间隔 -15ms，最低 50ms）
 
 ## 项目结构
 
 ```
 Snake game/
-├── Snake game.sln                  # Visual Studio 解决方案文件
+├── Snake game.sln              # Visual Studio 解决方案文件
 └── Snake game/
-    ├── Snake game.vcxproj          # Visual Studio 项目文件
-    ├── main.cpp                    # 主源代码（含注释）
-    └── main_commented.cpp          # 带中文注释的代码副本
+    ├── Snake game.vcxproj      # Visual Studio 项目文件
+    ├── Common.h                # 常量 H/W、Pos 结构体、BlockType 枚举
+    ├── main.cpp                # 程序入口：菜单 → 游戏循环
+    ├── Game.h / Game.cpp       # 游戏主循环、输入处理、暂停、冲刺、计分
+    ├── Map.h / Map.cpp         # 地图网格、边界绘制、食物生成
+    ├── Snake.h / Snake.cpp     # 蛇的数据结构、移动、自碰撞检测
+    ├── Menu.h / Menu.cpp       # 主菜单、操作说明页
+    └── Renderer.h / Renderer.cpp # 控制台渲染封装（光标定位、颜色、光标隐藏）
 ```
 
 ## 技术实现
@@ -50,21 +59,22 @@ Snake game/
 |------|------|
 | `Windows.h` | 控制台光标定位 (`SetConsoleCursorPosition`)、光标隐藏 (`SetConsoleCursorInfo`) |
 | `conio.h` | 非阻塞键盘输入 (`_kbhit` / `_getch`) |
-| `GetTickCount()` | 基于时间的移动控制（200ms 间隔），不受帧率影响 |
-| `SetConsoleOutputCP(CP_UTF8)` | 启用 UTF-8 控制台输出 |
+| `GetTickCount()` | 基于时间的移动控制，不受帧率影响 |
 
 ### 核心数据结构
 
 - **`Map`** — 60×27 字符网格，`hasFood` 标记食物存在状态
-- **`Snake`** — 数组存储蛇身坐标（最大 `H*W`），包含方向、长度、移动时间戳
-- **`dir[4][2]`** — 方向常量表：上/右/下/左
+- **`Snake`** — 数组存储蛇身坐标（最大 `H*W`），包含方向、长度
+- **`Sprint`** — 冲刺状态：`active`、`startTime`、`lastEndTime`（冷却控制）
 
 ### 游戏循环
 
 ```
-checkChangeDir   → 检测按键输入，更新方向（禁止反向）
-checkSnakeMove   → 按时间间隔移动蛇身，检测边界碰撞
-checkFoodGenerate → 食物被吃后随机生成新食物（避开蛇身）
+handleInput       → 检测按键输入，更新方向（禁止反向）、暂停/继续、冲刺
+updateSprint      → 冲刺持续 1 秒后自动结束，冷却 3 秒
+handlePauseLoop   → 暂停时阻塞等待 P 键继续
+moveTick          → 按时间间隔移动蛇身、检测边界/自碰撞、吃食物、更新分数
+generateFood      → 食物被吃后随机生成新食物（避开蛇身）
 ```
 
 ### 蛇的移动

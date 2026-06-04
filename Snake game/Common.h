@@ -11,5 +11,6 @@ struct Pos {
 enum class BlockType {
     EMPTY = 0,
     FOOD = 1,
+    OBSTACLE = 2,
 };
 
